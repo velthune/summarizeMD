@@ -2,41 +2,126 @@
 
 require 'tempfile'
 require 'fileutils'
+require 'optparse'
+require 'optparse/time'
+require 'ostruct'
+require 'yaml'
 
-filename = ARGV[0]
+VERSION = "0.1.0"
 
-if !File.exist?(filename)
-	abort("Please enter a valid MD file.")
+class MDUtils
+	def self.summarize(args)
+		filename = args[0]
+		options  = args[1]
+
+		if !File.exist?(filename)
+			abort("Please enter a valid MD file.")
+		end
+
+		puts "Generating summary for file " + filename
+
+		# In order to be sure to not write on existing file
+		timeNow = Time.now.to_f
+		tmpfilename = "tmp_00_" + timeNow.inspect + ".md"
+		temp_file = File.new(tmpfilename, "w")
+
+		summary = "\#Summary \n\n"
+		forbidden_words = ['Table of contents', 'define', 'pragma']
+
+		File.open(filename, 'r') do |f|
+			if options.verbose 
+				puts "Generate summary for section(s): "
+			end
+			f.each_line do |line|
+		    	if !(!line.start_with?("#") || forbidden_words.any? { |w| line =~ /#{w}/ }) 
+			    	title = line.gsub("#", "").strip
+				    href = "section-id-#{$.}"
+				    anchor = "<div id='#{href}'/>\n\n"
+				    temp_file.puts anchor + line
+				    summary += "  " * (line.count("#")%4) + "- [#{title}](\##{href})" + "\n"
+				    if options.verbose 
+				    	puts "\t- [#{title}]"
+				    end
+			 	else
+			 		temp_file.puts line
+			 	end   
+		   	end
+
+			temp_file.close
+			summary += "  \n\n"
+			outputFilename = "summarized_" + filename
+			if !options.output.empty? 
+				outputFilename = options.output
+				if  outputFilename.split()
+			end
+			system("echo \"#{summary}\" | cat - #{tmpfilename} > #{outputFilename}")
+		    system("rm #{tmpfilename}")
+		    puts "Done.\n"
+		end
+	end #(end summarize)	
 end
 
-puts "\n######  Generating summary for file " + filename + "  ######\n\n"
+class OptparseSummarize
 
-# In order to be sure to not write on existing file
-timeNow = Time.now.to_f
-tmpfilename = "tmp_00_" + timeNow.inspect + ".md"
-temp_file = File.new(tmpfilename, "w")
+  CODES = %w[iso-2022-jp shift_jis euc-jp utf8 binary]
+  CODE_ALIASES = { "jis" => "iso-2022-jp", "sjis" => "shift_jis" }
 
-summary = "\#\#Summary \n\n"
-forbidden_words = ['Table of contents', 'define', 'pragma']
+  #
+  # Return a structure describing the options.
+  #
+  def self.parse(args)
+    # The options specified on the command line will be collected in *options*.
+    # We set default values here.
+    options = OpenStruct.new
+    options.encoding = "utf8"
+    options.verbose = false
+    options.output = String.new
 
-File.open(filename, 'r') do |f|
-	f.each_line do |line|
-    	if !(!line.start_with?("#") || forbidden_words.any? { |w| line =~ /#{w}/ }) 
-	    	title = line.gsub("#", "").strip
-		    href = "section-id-#{$.}"
-		    anchor = "<div id='#{href}'/>\n\n"
-		    temp_file.puts anchor + line
-		    summary += "  " * (line.count("#")%4) + "- [#{title}](\##{href})" + "\n"
-	 	else
-	 		temp_file.puts line
-	 	end   
-   	end
+    opt_parser = OptionParser.new do |opts|
+      opts.banner = "Usage: summarizeMD <filename> [options]"
 
-	temp_file.close
-	summary += "  \n\n"
-    	system("echo \"#{summary}\" | cat - #{tmpfilename} > #{filename}")
-    	system("rm #{tmpfilename}")
-end
+      opts.separator ""
+      opts.separator "Specific options:"
+
+      # Output name.
+      opts.on("-o", "--output [filename]",
+              "Specify output filename") do |out|
+        options.output << out
+      end
+
+      # Boolean switch.
+      opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
+        options.verbose = v
+      end
+
+      opts.separator ""
+      opts.separator "Common options:"
+
+      # No argument, shows at tail.  This will print an options summary.
+      # Try it and see!
+      opts.on_tail("-h", "--help", "Show this message") do
+        puts opts
+        exit
+      end
+
+      # Another typical switch to print the version.
+      opts.on_tail("--version", "Show version") do
+        puts "#{VERSION}"
+        exit
+      end
+    end
+
+    opt_parser.parse!(args) 
+  
+    options
+  end  # parse()
+
+end  # class OptparseExample
+
+## ---- Main ----
 
 
+options = OptparseSummarize.parse(ARGV)
+
+mdUtils = MDUtils.summarize([ARGV[0], options]);
 
