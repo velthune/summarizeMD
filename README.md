@@ -35,5 +35,13 @@ In order to preserve original file, the output of the script produce another fil
 
 You can launch script with some options (work in progress).
 
-- --verbose: print section the will be in summary.
--  s
+
+
+- **-o, --output [filename]**  
+You can specify output filename.  
+- **-v, --[no-]verbose**  
+Run script verbosely printing some informations.   
+- **-h, --help**  
+Display list of available options.   
+- **--version**  
+Display script version.  
