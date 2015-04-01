@@ -31,3 +31,9 @@ In order to preserve original file, the output of the script produce another fil
     summarized_readme.md
        
   
+#Options
+
+You can launch script with some options (work in progress).
+
+- --verbose: print section the will be in summary.
+-  s

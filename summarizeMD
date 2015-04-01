@@ -10,7 +10,10 @@ require 'yaml'
 VERSION = "0.1.0"
 
 class MDUtils
+
+
 	def self.summarize(args)
+
 		filename = args[0]
 		options  = args[1]
 
@@ -52,13 +55,22 @@ class MDUtils
 			outputFilename = "summarized_" + filename
 			if !options.output.empty? 
 				outputFilename = options.output
-				if  outputFilename.split()
+				outputComponents = outputFilename.split(".")
+
+				if outputComponents.last.downcase != "md" 
+					outputFilename += ".md"
+					if options.verbose 
+				    	puts "Forcing adding extension."
+				    end
+				end
+				
 			end
 			system("echo \"#{summary}\" | cat - #{tmpfilename} > #{outputFilename}")
 		    system("rm #{tmpfilename}")
 		    puts "Done.\n"
 		end
 	end #(end summarize)	
+
 end
 
 class OptparseSummarize
