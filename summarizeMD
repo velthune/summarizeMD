@@ -5,16 +5,18 @@ require 'fileutils'
 
 filename = ARGV[0]
 
+if !File.exist?(filename)
+	abort("Please enter a valid MD file.")
+end
+
 puts "\n######  Generating summary for file " + filename + "  ######\n\n"
 
 # In order to be sure to not write on existing file
 timeNow = Time.now.to_f
 tmpfilename = "tmp_00_" + timeNow.inspect + ".md"
-
-temp_file = File.new("#{tmpfilename}", "w")
+temp_file = File.new(tmpfilename, "w")
 
 summary = "\#\#Summary \n\n"
-
 forbidden_words = ['Table of contents', 'define', 'pragma']
 
 File.open(filename, 'r') do |f|
@@ -32,9 +34,8 @@ File.open(filename, 'r') do |f|
 
 	temp_file.close
 	summary += "  \n\n"
-    system("echo \"#{summary}\" | cat - #{tmpfilename} > #{filename}")
-    system("rm #{tmpfilename}")
-
+    	system("echo \"#{summary}\" | cat - #{tmpfilename} > #{filename}")
+    	system("rm #{tmpfilename}")
 end
 
 
