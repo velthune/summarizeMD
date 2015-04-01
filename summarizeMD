@@ -41,7 +41,7 @@ class MDUtils
 				    href = "section-id-#{$.}"
 				    anchor = "<div id='#{href}'/>\n\n"
 				    temp_file.puts anchor + line
-				    summary += "  " * (line.count("#")%4) + "- [#{title}](\##{href})" + "\n"
+				    summary += "  " * (line.count("#")-1) + "- [#{title}](\##{href})" + "\n"
 				    if options.verbose 
 				    	puts "\t- [#{title}]"
 				    end
