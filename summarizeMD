@@ -24,9 +24,7 @@ class MDUtils
 		puts "Generating summary for file " + filename
 
 		# In order to be sure to not write on existing file
-		timeNow = Time.now.to_f
-		tmpfilename = "tmp_00_" + timeNow.inspect + ".md"
-		temp_file = File.new(tmpfilename, "w")
+		temp_file = Tempfile.new("summarizeMd")
 
 		summary = "\#Summary \n\n"
 		forbidden_words = ['Table of contents', 'define', 'pragma']
@@ -49,27 +47,52 @@ class MDUtils
 			 		temp_file.puts line
 			 	end   
 		   	end
-
-			temp_file.close
-			summary += "  \n\n"
-			outputFilename = "summarized_" + filename
-			if !options.output.empty? 
-				outputFilename = options.output
-				outputComponents = outputFilename.split(".")
-
-				if outputComponents.last.downcase != "md" 
-					outputFilename += ".md"
-					if options.verbose 
-				    	puts "Forcing adding extension."
-				    end
-				end
-				
-			end
-			system("echo \"#{summary}\" | cat - #{tmpfilename} > #{outputFilename}")
-		    system("rm #{tmpfilename}")
-		    puts "Done.\n"
+                        temp_file.close
 		end
-	end #(end summarize)	
+                summary += "  \n\n"
+        
+                with_output_file(options, filename) do |output_file|
+                   prepend_to_file(summary, temp_file, output_file) 
+                end
+                
+                temp_file.unlink
+                puts "Done.\n"
+	end #(end summarize)
+        
+        def self.prepend_to_file(toPrepend, source_file, target_file)
+            File.open(target_file, 'w') do |fo|
+                fo.puts(toPrepend)
+                File.foreach(source_file) do |li|
+                    fo.puts li
+                end
+            end
+        end
+        
+        def self.with_output_file(options, filename)
+            outputFilename = "summarized_" + filename
+            if !options.output.empty? 
+                outputFilename = options.output
+                outputComponents = outputFilename.split(".")
+                if outputComponents.last.downcase != "md" 
+                    outputFilename += ".md"
+                    if options.verbose 
+                        puts "Forcing adding extension."
+                    end
+                end
+            end
+            
+            if File.file?(outputFilename) && !options.force
+                puts "output file exists. Use --force or -f to overwrite it."
+                exit 1
+            elsif File.directory?(outputFilename)
+                puts "output file cannot be a directory"
+                exit 2
+            else
+               File.open(outputFilename, "w") do |output_file|
+                  yield output_file 
+               end
+            end
+        end
 
 end
 
@@ -87,6 +110,7 @@ class OptparseSummarize
     options = OpenStruct.new
     options.encoding = "utf8"
     options.verbose = false
+    options.force = false
     options.output = String.new
 
     opt_parser = OptionParser.new do |opts|
@@ -104,6 +128,11 @@ class OptparseSummarize
       # Boolean switch.
       opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
         options.verbose = v
+      end
+      
+      # Boolean switch.
+      opts.on("-f", "--force", "force writing the output file, even if its overwrite an existing file") do |f|
+        options.force = f
       end
 
       opts.separator ""
