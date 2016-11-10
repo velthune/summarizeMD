@@ -52,7 +52,11 @@ class MDUtils
                 summary += "  \n\n"
         
                 with_output_file(options, filename) do |output_file|
-                   prepend_to_file(summary, temp_file, output_file) 
+                    if (options.replace_summary_token.empty?)
+                        prepend_to_file(summary, temp_file, output_file) 
+                    else
+                        replace_token_with(options.replace_summary_token, summary, temp_file, output_file)
+                    end
                 end
                 
                 temp_file.unlink
@@ -64,6 +68,18 @@ class MDUtils
                 fo.puts(toPrepend)
                 File.foreach(source_file) do |li|
                     fo.puts li
+                end
+            end
+        end
+        
+        def self.replace_token_with(token, toPrepend, source_file, target_file)
+            File.open(target_file, 'w') do |fo|
+                File.foreach(source_file) do |li|
+                    if li.include?(token)
+                        fo.puts toPrepend
+                    else
+                        fo.puts li
+                    end
                 end
             end
         end
@@ -112,6 +128,7 @@ class OptparseSummarize
     options.verbose = false
     options.force = false
     options.output = String.new
+    options.replace_summary_token = String.new
 
     opt_parser = OptionParser.new do |opts|
       opts.banner = "Usage: summarizeMD <filename> [options]"
@@ -123,6 +140,11 @@ class OptparseSummarize
       opts.on("-o", "--output [filename]",
               "Specify output filename") do |out|
         options.output << out
+      end
+      
+      opts.on("-t", "--replace_summary_token [summary_token]",
+              "Replace the line containing the supplied token, with the sumrmary, instead of putting the summary in the top of the file.") do |out|
+        options.replace_summary_token << out
       end
 
       # Boolean switch.
