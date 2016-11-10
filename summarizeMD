@@ -26,7 +26,7 @@ class MDUtils
 		# In order to be sure to not write on existing file
 		temp_file = Tempfile.new("summarizeMd")
 
-		summary = "\#Summary \n\n"
+		summary = generate_sumary_heading(options)
 		forbidden_words = ['Table of contents', 'define', 'pragma']
 
 		File.open(filename, 'r') do |f|
@@ -109,6 +109,17 @@ class MDUtils
                end
             end
         end
+        
+        def self.generate_sumary_heading(options)
+            if options.heading_level == 0
+                return String.new
+            else
+                heading = String.new
+                options.heading_level.times { heading << "\#" }
+                heading << " Summary \n\n"
+                return heading
+            end
+        end
 
 end
 
@@ -129,6 +140,7 @@ class OptparseSummarize
     options.force = false
     options.output = String.new
     options.replace_summary_token = String.new
+    options.heading_level = 1
 
     opt_parser = OptionParser.new do |opts|
       opts.banner = "Usage: summarizeMD <filename> [options]"
@@ -143,8 +155,13 @@ class OptparseSummarize
       end
       
       opts.on("-t", "--replace_summary_token [summary_token]",
-              "Replace the line containing the supplied token, with the sumrmary, instead of putting the summary in the top of the file.") do |out|
+              "Replace the line containing the supplied token, with the sumrmary, instead of putting the summary in the top of the file. If the token is not found, then no summary is inserted.") do |out|
         options.replace_summary_token << out
+      end
+      
+      opts.on("-l", "--heading_level [heading level]", Integer,
+              "Specify the heading level, eg. The number of ## to insert before the Sumary heading. Set this to 0 to not add a heading to the summary.") do |l|
+        options.heading_level = l
       end
 
       # Boolean switch.
@@ -153,7 +170,7 @@ class OptparseSummarize
       end
       
       # Boolean switch.
-      opts.on("-f", "--force", "force writing the output file, even if its overwrite an existing file") do |f|
+      opts.on("-f", "--[no-]force", "force writing the output file, even if its overwrite an existing file") do |f|
         options.force = f
       end
 
@@ -162,16 +179,22 @@ class OptparseSummarize
 
       # No argument, shows at tail.  This will print an options summary.
       # Try it and see!
-      opts.on_tail("-h", "--help", "Show this message") do
+      opts.on("-h", "--help", "Show this message") do
         puts opts
         exit
       end
 
       # Another typical switch to print the version.
-      opts.on_tail("--version", "Show version") do
+      opts.on("--version", "Show version") do
         puts "#{VERSION}"
         exit
       end
+      
+      opts.separator ""
+      opts.separator "Exit codes:"
+      opts.separator "    1 = output file exists, and called without --force (-f)"
+      opts.separator "    2 = output file cannot be a directory"
+      opts.separator "    3 = --heading_level (-l) must be a positive integer or zero"
     end
 
     opt_parser.parse!(args) 
@@ -185,6 +208,10 @@ end  # class OptparseExample
 
 
 options = OptparseSummarize.parse(ARGV)
+if options.heading_level < 0
+    puts "--heading_level (-l) must be a positive integer or zero"
+    exit 3
+end
 
 mdUtils = MDUtils.summarize([ARGV[0], options]);
 
