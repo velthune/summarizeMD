@@ -2,7 +2,7 @@
 SummarizeMD is a simple Ruby script that generate summary (TOC) for an existing MD document.  
 Each item of summary is linked to the respective section.
 
-#Usage
+# Usage
 - download file
 - open console
 - chmod +x summarizeMD
@@ -10,7 +10,7 @@ Each item of summary is linked to the respective section.
 
 
 
-#Output
+# Output
 
 In order to preserve original file, the output of the script produce another file prepending generated summary.
 
@@ -31,7 +31,7 @@ In order to preserve original file, the output of the script produce another fil
     summarized_readme.md
        
   
-#Options
+# Options
 
 You can launch script with some options (work in progress).
 
@@ -47,7 +47,7 @@ Display list of available options.
 Display script version.  
 
 
-#License
+# License
 
 Copyright (c) 2015 velthune
 
