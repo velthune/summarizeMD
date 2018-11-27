@@ -28,7 +28,7 @@ class MDUtils
 		tmpfilename = "tmp_00_" + timeNow.inspect + ".md"
 		temp_file = File.new(tmpfilename, "w")
 
-		summary = "\#Summary \n\n"
+		summary = "\# Summary \n\n"
 		forbidden_words = ['Table of contents', 'define', 'pragma']
 
 		File.open(filename, 'r') do |f|
