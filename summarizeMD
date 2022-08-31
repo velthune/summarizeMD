@@ -65,9 +65,12 @@ class MDUtils
 				end
 				
 			end
-			system("echo \"#{summary}\" | cat - #{tmpfilename} > #{outputFilename}")
-		    system("rm #{tmpfilename}")
-		    puts "Done.\n"
+      File.open(outputFilename, 'w') { |f| f.write summary}
+      f = File.open(tmpfilename, 'r')
+      File.write(outputFilename, f.read(), mode: 'a')
+      f.close
+      system("rm #{tmpfilename}")
+      puts "Done.\n"
 		end
 	end #(end summarize)	
 
